@@ -47,6 +47,8 @@ bash run_test.sh
 
 ## Experiments
 
+All code has been optimized for multiprocessing and tested on a multi-GPU machine, specifically the A800, using Python version 3.12. For high-throughput processing, please refer to `peppcbench/pipeline.py` and `peppcbench/multiprocess.py` for further details.
+
 ### Workflow
 
 ```bash
