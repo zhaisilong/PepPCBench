@@ -130,3 +130,25 @@ class GPUQueue:
         except Exception as e:
             print(f"Error while checking GPU {gpu_id}: {e}")
             return False
+
+
+def get_status(status_dir: Path, mode: str) -> str:
+    """
+    检查指定模式 (msa/infer) 的状态。
+
+    :param status_dir: 状态文件所在目录
+    :param mode: 模式 ("msa" 或 "infer")
+    :return: 状态 ("running", "done", "error" 或 "None")
+    """
+    running_file = status_dir / f"{mode}.running"
+    done_file = status_dir / f"{mode}.done"
+    error_file = status_dir / f"{mode}.error"
+
+    if running_file.exists():
+        return "running"
+    elif done_file.exists():
+        return "done"
+    elif error_file.exists():
+        return "error"
+    else:
+        return "None"

@@ -63,7 +63,7 @@ python -m pipeline.gen_config
 python -m pipeline.run_model
 
 # Supervise Workflow
-python -m pipeline.summary_job
+python -m pipeline.summary_jobs
 
 # Evaluate
 python -m pipeline.evaluate
