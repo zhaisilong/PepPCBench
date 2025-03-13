@@ -45,7 +45,33 @@ python -m pip install -e .
 bash run_test.sh
 ```
 
-#### 
+## Experiments
+
+### Workflow
+
+```bash
+# Build Data
+python -m pipeline.build_data
+
+# Extract Job Info
+python -m pipeline.extract_job_info
+
+# Generate Config
+python -m pipeline.gen_config
+
+# Run Model
+python -m pipeline.run_model
+
+# Supervise Workflow
+python -m pipeline.summary_job
+
+# Evaluate
+python -m pipeline.evaluate
+```
+
+### Analysis
+
+- some useful notebooks are in `./notebooks` to analyze the results
 
 ## Citations
 
