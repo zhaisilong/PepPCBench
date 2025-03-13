@@ -3,7 +3,6 @@ import subprocess
 from pathlib import Path
 import sys
 from peppcbench.multiprocess import GPUQueue
-import traceback
 
 
 class BaseModel:
