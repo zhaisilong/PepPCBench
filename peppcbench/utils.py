@@ -1257,6 +1257,7 @@ CCD_NAME_TO_ONE_LETTER: Mapping[str, str] = {
 # common_typos_enable
 # pyformat: enable
 
+
 def replace_char(s, index, new_char):
     """
     替换字符串或列表中指定位置的字符或元素。
@@ -1294,10 +1295,12 @@ def replace_char(s, index, new_char):
     # 如果类型不匹配，抛出异常（不会执行到这里）
     raise TypeError("未处理的输入类型")
 
+
 @functools.lru_cache(maxsize=64)
 def letters_three_to_one(restype: str, *, default: str) -> str:
     """Returns single letter name if one exists otherwise returns default."""
     return CCD_NAME_TO_ONE_LETTER.get(restype, default)
+
 
 def dict2json(config) -> str:
     if hasattr(config, "to_dict"):
@@ -1305,6 +1308,11 @@ def dict2json(config) -> str:
             config.to_dict()
         )  # Convert to dictionary if it's a dataclass with `to_dict`
     return json.dumps(config, indent=2)
+
+
+def load_job_info(job_dir: Path) -> Dict:
+    job_info_path = job_dir / "job_info.json"
+    return load_json(job_info_path)
 
 
 def load_json(json_path: str) -> Dict:
