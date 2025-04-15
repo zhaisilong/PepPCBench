@@ -1,6 +1,10 @@
 # PepPCBench
 
-Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with All-Atom Protein Folding Neural Networks
+PepPCBench is a Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3.
+
+⚠️ Under Peer Review | Data & Scripts Coming Soon
+
+We welcome community feedback! For questions or dataset requests, open an ​Issue​ or contact zhaisilong@outlook.com.
 
 ## Setups
 
@@ -78,5 +82,14 @@ python -m pipeline.evaluate
 ## Citations
 
 ```bibtex
-@article{}
+@article {Zhai2025.04.08.647699,
+	author = {Zhai, Silong and Zhao, Huifeng and Wang, Jike and Lin, Shaolong and Liu, Tiantao and Jiang, Dejun and Liu, Huanxiang and Kang, Yu and Yao, Xiaojun and Hou, Tingjun},
+	title = {PepPCBench is a Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3},
+	elocation-id = {2025.04.08.647699},
+	year = {2025},
+	doi = {10.1101/2025.04.08.647699},
+	publisher = {Cold Spring Harbor Laboratory},
+	eprint = {https://www.biorxiv.org/content/early/2025/04/13/2025.04.08.647699.full.pdf},
+	journal = {bioRxiv}
+}
 ```
