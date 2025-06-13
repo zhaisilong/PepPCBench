@@ -5,7 +5,7 @@ PepPCBench: A Comprehensive Benchmark for Protein-Peptide Complex Structure Pred
 ⚠️ Under Peer Review | Data & Scripts Coming Soon
 
 The peer-review process is currently ongoing. In the meantime, to promote open science and foster early community collaboration, we have decided to release the code and data ahead of publication.
-This repository remains under active development and will continue to be updated and refined as part of our future work.
+This repository is still under active development and will be continuously updated and expanded in future work, including applications to cyclic monomer and cyclic peptide–protein complex prediction.
 
 We welcome feedback from the community!
 For questions, issues, or dataset requests, please open an [Issue](https://github.com/zhaisilong/PepPCBench/issues) or contact us directly at `zhaisilong@outlook.com`.
