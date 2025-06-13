@@ -1,10 +1,14 @@
 # PepPCBench
 
-PepPCBench is a Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3.
+PepPCBench: A Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3
 
 ⚠️ Under Peer Review | Data & Scripts Coming Soon
 
-We welcome community feedback! For questions or dataset requests, open an ​Issue​ or contact zhaisilong@outlook.com.
+The peer-review process is currently ongoing. In the meantime, to promote open science and foster early community collaboration, we have decided to release the code and data ahead of publication.
+This repository remains under active development and will continue to be updated and refined as part of our future work.
+
+We welcome feedback from the community!
+For questions, issues, or dataset requests, please open an [Issue](https://github.com/zhaisilong/PepPCBench/issues) or contact us directly at `zhaisilong@outlook.com`.
 
 ## Setups
 
@@ -21,6 +25,8 @@ pip install -e .
 ```
 
 ### Optional
+
+- A seperated `tools` directory is used to store all the external tools.
 
 #### Maxit
 
@@ -49,6 +55,15 @@ python -m pip install -e .
 bash run_test.sh
 ```
 
+#### PyRosetta
+
+- Using PyRosetta to calculate the deltaG of the predicted the binding energy of the peptide-protein complex
+
+```bash
+pip install pyrosetta-installer
+python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
+```
+
 ## Experiments
 
 All code has been optimized for multiprocessing and tested on a multi-GPU machine, specifically the A800, using Python version 3.12. For high-throughput processing, please refer to `peppcbench/pipeline.py` and `peppcbench/multiprocess.py` for further details.
@@ -57,39 +72,60 @@ All code has been optimized for multiprocessing and tested on a multi-GPU machin
 
 ```bash
 # Build Data
-python -m pipeline.build_data
+python pipeline/build_data.py
 
 # Extract Job Info
-python -m pipeline.extract_job_info
+python pipeline/extract_job_info.py
 
 # Generate Config
-python -m pipeline.gen_config
+python pipeline/gen_config.py
 
 # Run Model
-python -m pipeline.run_model
+python pipeline/run_model.py
+## with specific GPU, default is 3
+python pipeline/run_model.py --gpu_id=0
 
 # Supervise Workflow
-python -m pipeline.summary_jobs
+python pipeline/summary_jobs.py  # results are saved in `./results/job_summary.png` and `./results/job_summary.csv`
 
-# Evaluate
-python -m pipeline.evaluate
+# Post Process
+python pipeline/post_process.py
+```
+
+### Metrics
+
+- The output files are in `./results`
+
+```bash
+python evaluate/cal_confidence.py  # results are saved in `./results/af3_confidence.csv`
+python evaluate/cal_dockq.py  # results are saved in `./results/af3_dockq.csv`
+python evaluate/cal_rmsd.py  # results are saved in `./results/af3_rmsd.csv`
+python evaluate/cal_deltag.py  # results are saved in `./results/af3_deltag.csv`
+
+# if you want to relax the predicted complex, you can run the following command:
+python pipeline/relax.py
+# then you can run the following command to calculate the deltaG of the predicted complex after relaxation
+python evaluate/cal_deltag.py
 ```
 
 ### Analysis
 
 - some useful notebooks are in `./notebooks` to analyze the results
+- Contents
+  - `contact_map.ipynb`: visualize the contact map of the predicted complex
+  - `ranking_power.ipynb`: visualize the ranking power of different scoring functions for the predicted complex
 
 ## Citations
 
 ```bibtex
 @article {Zhai2025.04.08.647699,
-	author = {Zhai, Silong and Zhao, Huifeng and Wang, Jike and Lin, Shaolong and Liu, Tiantao and Jiang, Dejun and Liu, Huanxiang and Kang, Yu and Yao, Xiaojun and Hou, Tingjun},
-	title = {PepPCBench is a Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3},
-	elocation-id = {2025.04.08.647699},
-	year = {2025},
-	doi = {10.1101/2025.04.08.647699},
-	publisher = {Cold Spring Harbor Laboratory},
-	eprint = {https://www.biorxiv.org/content/early/2025/04/13/2025.04.08.647699.full.pdf},
-	journal = {bioRxiv}
+ author = {Zhai, Silong and Zhao, Huifeng and Wang, Jike and Lin, Shaolong and Liu, Tiantao and Jiang, Dejun and Liu, Huanxiang and Kang, Yu and Yao, Xiaojun and Hou, Tingjun},
+ title = {PepPCBench is a Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3},
+ elocation-id = {2025.04.08.647699},
+ year = {2025},
+ doi = {10.1101/2025.04.08.647699},
+ publisher = {Cold Spring Harbor Laboratory},
+ eprint = {https://www.biorxiv.org/content/early/2025/04/13/2025.04.08.647699.full.pdf},
+ journal = {bioRxiv}
 }
 ```

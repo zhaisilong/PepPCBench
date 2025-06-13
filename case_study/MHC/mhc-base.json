@@ -1,0 +1,14 @@
+{
+  "name": "mhc",
+  "modelSeeds": [42, 2025, 3, 55, 71],
+  "sequences": [
+    {
+      "protein": {
+        "id": "B",
+        "sequence": "SMRYFFTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWIEQEGPEYWDGETRKVKAHSQTHRVDLGTLRGYYNQSEAGSHTVQRMYGCDVGSDWRFLRGYHQYAYDGKDYIALKEDLRSWTAADMAAQTTKHKWEAAHVAEQLRAYLEGTCVEWLRRYLEN"
+      }
+    }
+  ],
+  "dialect": "alphafold3",
+  "version": 1
+}

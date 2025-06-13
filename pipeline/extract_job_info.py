@@ -12,7 +12,7 @@ logger.add(sys.stdout, level="INFO")
 
 
 def build_task_args_list(df: pd.DataFrame, target_dir: Path):
-    arg_list = []
+    args_list = []
     for _, row in df.iterrows():
         job_name = row.get("job_name")
         pdb_id = row.get("pdb_id")
@@ -20,7 +20,7 @@ def build_task_args_list(df: pd.DataFrame, target_dir: Path):
         peptide_chains = row.get("peptide_chains")
         protein_chains = row.get("protein_chains")
 
-        arg_list.append(
+        args_list.append(
             {
                 "job_name": job_name,
                 "pdb_id": pdb_id,
@@ -29,7 +29,7 @@ def build_task_args_list(df: pd.DataFrame, target_dir: Path):
                 "protein_chains": protein_chains,
             }
         )
-    return arg_list
+    return args_list
 
 
 def process_task(task_args: dict):

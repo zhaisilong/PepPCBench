@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="peppcbench",
-    version="0.3.0",
+    version="0.4.0",
     description="Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with All-Atom Protein Folding Neural Networks",
     author="Silong Zhai",
     author_email="zhaisilong@outlook.com",

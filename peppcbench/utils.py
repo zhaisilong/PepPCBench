@@ -1,7 +1,8 @@
 import functools
 import json
 from pathlib import Path
-from typing import Dict, Mapping
+import re
+from typing import Dict, Mapping, Optional, Tuple
 from loguru import logger
 
 CCD_NAME_TO_ONE_LETTER: Mapping[str, str] = {
@@ -1331,3 +1332,16 @@ def save_json(json_str: str, json_path: str, verbose=False):
         file.write(json_str)
     if verbose:
         logger.info(f"JSON saved to {json_path}")
+
+
+def get_ids_from_name(name: str) -> Optional[Tuple[int, int]]:
+    """
+    Extract seed_id and sample_id from the name of the form "seed-<seed_id>_sample-<sample_id>"
+    """
+    pattern = r"seed-(\d+)_sample-(\d+)"
+    match = re.search(pattern, name)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    else:
+        logger.warning(f"{name} does not match pattern {pattern}")
+        return None, None

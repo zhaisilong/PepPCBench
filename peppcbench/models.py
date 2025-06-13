@@ -70,7 +70,7 @@ class BaseModel:
         return "pending"
 
     async def run_mode(self, job_name, model_job_dir, mode, verbose):
-        """运行指定模式"""
+        """Run mode"""
         status = self.check_status(model_job_dir, mode)
         if status in ["done", "running"]:
             return  # 跳过已完成或正在运行的任务

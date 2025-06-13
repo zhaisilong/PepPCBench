@@ -25,8 +25,9 @@ class Pipeline:
         self.job_list = [
             job_dir for job_dir in self.data_dir.iterdir() if job_dir.is_dir()
         ]
+        assert len(self.job_list) > 0, "No jobs found in data directory"
 
-    def gen_config(self, model_name: str = "af3"):
+    def gen_config(self, model_name: str = "af3", modelSeeds: List[int] = [42], force_write: bool = False):
         for job_dir in tqdm(self.job_list):
             job_info_path = job_dir / "job_info.json"
             assert job_info_path.exists(), f"Job info not found: {job_info_path}"
@@ -35,6 +36,9 @@ class Pipeline:
             model_dir.mkdir(exist_ok=True)
 
             config_path = model_dir / f"{job_info['job_name']}.json"
+            if config_path.exists() and not force_write:
+                logger.debug(f"Config {config_path} already exists")
+                continue
 
             protein_chains = job_info["protein_chains"].split(":")
             peptide_chains = job_info["peptide_chains"].split(":")
@@ -76,7 +80,7 @@ class Pipeline:
 
             af3_dict = {
                 "name": job_info["job_name"],
-                "modelSeeds": [42],
+                "modelSeeds": modelSeeds,
                 "sequences": sequences,
                 "dialect": "alphafold3",
                 "version": 1,
@@ -105,8 +109,8 @@ class Pipeline:
         assert self.job_list, "No jobs to run"
         af3_model = AF3(
             bash_path=Path(
-                "/data/home/silong/paper/PepPCBench/scripts/run_alphafold.sh"
-            ),
+                "~/paper/PepPCBench/scripts/run_alphafold.sh"
+            ).expanduser(),
             gpu_pool=GPUQueue(gpus=gpus),
         )
 

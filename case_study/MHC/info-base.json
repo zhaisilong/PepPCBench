@@ -1,0 +1,15 @@
+{
+  "B": {
+    "id": "B",
+    "sequence": "SMRYFFTSVSRPGRGEPRFIAVGYVDDTQFVRFDSDAASQRMEPRAPWIEQEGPEYWDGETRKVKAHSQTHRVDLGTLRGYYNQSEAGSHTVQRMYGCDVGSDWRFLRGYHQYAYDGKDYIALKEDLRSWTAADMAAQTTKHKWEAAHVAEQLRAYLEGTCVEWLRRYLEN",
+    "has_ncaa": false,
+    "positions": [],
+    "types": [],
+    "length": 174
+  },
+  "pdb_id": "xxxx",
+  "job_name": "xxxx_A",
+  "peptide_chains": "A",
+  "protein_chains": "B",
+  "pdb_date": "2026-01-01"
+}
