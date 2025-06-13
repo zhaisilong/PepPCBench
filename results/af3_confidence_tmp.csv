@@ -1,0 +1,2 @@
+job_id,model_name,seed_id,sample_id,original_iptm,original_ptm,ipae,cpae,actifptm,iptm,ptm,confidence_score,original_confidence_score,ranking_score,original_ranking_score
+8c5l_C,af3,1,0,0.45,0.65,{'A-C': 23.6848},"{'A': 13.4325, 'C': 5.025}",0.5294,0.4522,0.6491,0.5533,0.4916,0.5683,0.5066

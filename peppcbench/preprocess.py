@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from io import StringIO
@@ -5,7 +6,8 @@ import re
 import subprocess
 import gemmi
 from loguru import logger
-from typing import Any
+from typing import Any, List
+import numpy as np
 from pymol import cmd
 from pdbfixer import PDBFixer
 from Bio.PDB.MMCIFParser import MMCIFParser
@@ -17,8 +19,17 @@ from pdbtools import (
     pdb_fromcif,
 )
 import importlib.util
-from Bio.PDB import PDBList
 import openmm.app as app
+from DockQ.DockQ import load_PDB
+from Bio.PDB.Structure import Structure
+from Bio.PDB.Model import Model
+from Bio.PDB.Chain import Chain
+from Bio.PDB import PDBIO, PDBList
+from Bio.PDB.Residue import Residue
+from scipy.optimize import linear_sum_assignment
+from peppcbench.utils import dict2json
+import time
+
 
 PDB_LIST = PDBList(server="https://files.wwpdb.org")
 
@@ -54,13 +65,27 @@ def split_structure(
     get_peptide: bool = True,
     get_peptide_pocket: bool = True,
     force_split: bool = False,
+    suffix_name: str = None,
 ):
+    """
+    Example inputs: 
+    structure_path = "/data/home/silong/paper/PepPCBench/data/pdb/1a0q/1a0q.cif"
+    peptide_chains = "A:"
+    protein_chains = "B:C:D"
+    """
     structure_path = structure_path.resolve()
     peptide_save_path = structure_path.parent / "peptide.pdb"
     pocket_save_path = structure_path.parent / "pocket.pdb"
     complex_save_path = structure_path.parent / "complex.pdb"
     protein_save_path = structure_path.parent / "protein.pdb"
     peptide_pocket_save_path = structure_path.parent / "peptide_pocket.pdb"
+    
+    if suffix_name:
+        peptide_save_path = structure_path.parent / f"peptide_{suffix_name}.pdb"
+        pocket_save_path = structure_path.parent / f"pocket_{suffix_name}.pdb"
+        complex_save_path = structure_path.parent / f"complex_{suffix_name}.pdb"
+        protein_save_path = structure_path.parent / f"protein_{suffix_name}.pdb"
+        peptide_pocket_save_path = structure_path.parent / f"peptide_pocket_{suffix_name}.pdb"
 
     cmd.reinitialize()
     cmd.load(structure_path)
@@ -109,7 +134,7 @@ def cif2pdb(cif_path: Path, force_write: bool = False):
             "2",
         ]
         logger.debug(f"Maxit CIF to PDB: {' '.join(maxit_cmd)}")
-        result = subprocess.run(maxit_cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(maxit_cmd, check=True)
         logger.debug(result.stdout)
         return pdb_path
     except Exception as e:
@@ -200,29 +225,30 @@ def prepare_pdb(
     force_write: bool = False,
     verbose: bool = False,
 ):
-    if verbose:
-        with pdb_path.open("r") as f:
-            has_error = pdb_wc.run(f, None)
-            logger.info(f"Has error: {'Yes' if has_error else 'No'}")
-    if pdb_path.suffix == ".cif":
-        with pdb_path.open("r") as f:
-            complex_pdb_str = run_pdbtools(f, pdb_fromcif)
-    else:
-        complex_pdb_str = pdb_path.read_text()
-
-    complex_pdb_str = run_pdbtools(StringIO(complex_pdb_str), pdb_delelem, "H")
     save_complex_path = pdb_path.parent / "complex_fixed.pdb"
     if save_complex_path.exists() and not force_write:
         logger.info(f"File {save_complex_path} already exists")
     else:
+        if verbose:
+            with pdb_path.open("r") as f:
+                has_error = pdb_wc.run(f, None)
+                logger.info(f"Has error: {'Yes' if has_error else 'No'}")
+        if pdb_path.suffix == ".cif":
+            with pdb_path.open("r") as f:
+                complex_pdb_str = run_pdbtools(f, pdb_fromcif)
+        else:
+            complex_pdb_str = pdb_path.read_text()
+
+        complex_pdb_str = run_pdbtools(StringIO(complex_pdb_str), pdb_delelem, "H")
+
         fix_pdb(StringIO(complex_pdb_str), save_complex_path)
 
-    split_structure(
-        save_complex_path,
-        peptide_chains,
-        protein_chains,
-        force_split=force_write,
-    )
+        split_structure(
+            save_complex_path,
+            peptide_chains,
+            protein_chains,
+            force_split=force_write,
+        )
 
 
 def replace_and_record(input_text):
@@ -300,3 +326,250 @@ def get_job_info(cif_path: Path, row_info: dict):
         return job_info
     except Exception as e:
         raise RuntimeError(f"Error getting job info: {e}")
+
+
+def process_pdb_chains(
+    pdb_model: Model,
+    rec_chains: List[str],
+    pep_chain: str,
+    save_path: Path = None,
+) -> str:
+
+    # 创建新结构
+    new_structure = Structure(0)
+    new_model = Model(0)
+
+    # 处理肽链
+    pep_chain_new = Chain("A")
+    pep_residues_seen = set()  # 用于跟踪已处理的残基编号
+    for chain in pdb_model:
+        if chain.id == pep_chain:
+            for residue in chain:
+                # 跳过已经处理过的残基编号
+                res_id = residue.get_id()
+                if res_id in pep_residues_seen:
+                    continue
+                pep_residues_seen.add(res_id)
+                pep_chain_new.add(residue.copy())
+
+    # 处理受体链
+    rec_chain_new = Chain("B")
+    rec_residue_counter = 1  # 初始化受体链残基编号
+    for chain in pdb_model:
+        if chain.id in rec_chains:
+            for residue in chain:
+                if residue.id[0] != " ":  # 跳过非标准残基（如水分子）
+                    continue
+                # 创建新的残基ID，(hetfield, resseq, icode)
+                new_res_id = (" ", rec_residue_counter, " ")
+                rec_residue_counter += 1
+                # 创建新的Residue对象
+                new_residue = Residue(new_res_id, residue.resname, residue.segid)
+                # 复制所有原子
+                for atom in residue:
+                    new_residue.add(atom.copy())  # 添加原子到新残基
+                rec_chain_new.add(new_residue)
+
+    # 添加链到模型
+    new_model.add(pep_chain_new)
+    new_model.add(rec_chain_new)
+    new_structure.add(new_model)
+
+    io = PDBIO()
+    io.set_structure(new_structure)
+    io.save(save_path.open("wt"))
+    logger.debug(f"肽链 ({pep_chain} -> A) 残基数: {len(pep_chain_new)}")
+    logger.debug(f"受体链 ({','.join(rec_chains)} -> B) 残基数: {len(rec_chain_new)}")
+
+
+def edit_distance(s1, s2):
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(m + 1):
+        dp[i][0] = i
+    for j in range(n + 1):
+        dp[0][j] = j
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            cost = 0 if s1[i - 1] == s2[j - 1] else 1
+            dp[i][j] = min(
+                dp[i - 1][j] + 1,  # 删除
+                dp[i][j - 1] + 1,  # 插入
+                dp[i - 1][j - 1] + cost,  # 替换
+            )
+    return dp[m][n]
+
+
+def sequence_similarity(s1, s2):
+    dist = edit_distance(s1, s2)
+    length = max(len(s1), len(s2))
+    similarity = 1 - dist / length
+    return max(similarity, 0)
+
+
+def fuzzy_mapping(seq1_dict, seq2_dict):
+    """
+    seq1_dict: {A: 'XXXXX', B: 'XXXXX', C: 'XXXXX', D: 'XXXXX'} 大写字母为键
+    seq2_dict: {a: 'xxxxx', b: 'xxxxx', c: 'xxxxx', d: 'xxxxx'} 小写字母为键
+
+    将seq1_dict中每个序列与seq2_dict中的序列计算相似度，选出最匹配且唯一的seq2键。
+    返回一个字典，如 {A: 'b', B: 'c', C: 'd', D: 'a'}。
+    """
+    # 提取键列表
+    keys_seq1 = list(seq1_dict.keys())
+    keys_seq2 = list(seq2_dict.keys())
+
+    num_seq1 = len(keys_seq1)
+    num_seq2 = len(keys_seq2)
+
+    # 检查是否可以进行一对一映射
+    if num_seq1 > num_seq2:
+        raise ValueError("seq1_dict中的键数量超过了seq2_dict，无法进行一对一映射。")
+
+    # 构建相似度矩阵
+    similarity_matrix = np.zeros((num_seq1, num_seq2))
+    for i, k1 in enumerate(keys_seq1):
+        for j, k2 in enumerate(keys_seq2):
+            similarity_matrix[i][j] = sequence_similarity(seq1_dict[k1], seq2_dict[k2])
+
+    # 将相似度矩阵转换为成本矩阵
+    # 因为linear_sum_assignment是最小化成本，所以我们取最大相似度的负数作为成本
+    cost_matrix = -similarity_matrix
+
+    # 使用匈牙利算法找到最优匹配
+    row_ind, col_ind = linear_sum_assignment(cost_matrix)
+
+    # 构建结果映射字典
+    result = {}
+    for i, j in zip(row_ind, col_ind):
+        k1 = keys_seq1[i]
+        k2 = keys_seq2[j]
+        result[k1] = k2
+
+    return result
+
+
+def chain_map(pdb_model: Model, pdb_native: Model):
+    """
+    Map chains between predicted model and native structure based on sequence similarity.
+
+    Parameters:
+        pdb_model (Model): Predicted model structure.
+        pdb_native (Model): Native structure.
+
+    Returns:
+        dict: Mapping from native chains to model chains.
+    """
+    model_chains = {
+        chain.id: "".join(res.resname for res in chain.get_residues())
+        for chain in pdb_model.get_chains()
+    }
+    native_chains = {
+        chain.id: "".join(res.resname for res in chain.get_residues())
+        for chain in pdb_native.get_chains()
+    }
+
+    # chain_mapping = {}
+    # for model_chain_id, model_seq in model_chains.items():
+    #     matched_native_chain_id = get_most_similar_seq(model_seq, native_chains)
+    #     chain_mapping[matched_native_chain_id] = model_chain_id
+    # return chain_mapping
+    return fuzzy_mapping(native_chains, model_chains)
+
+
+def process_pdb_pair_chains(
+    pdb_path: Path,
+    pdb_ref_path: Path,
+    peptide_chains: str,
+    protein_chains: str,
+    force_write: bool = False,
+    suffix_name: str = "complex_processed",
+):
+    processed_pdb_path = pdb_path.parent / f"{suffix_name}.pdb"
+    processed_pdb_ref_path = pdb_ref_path.parent / f"{suffix_name}.pdb"
+
+    if (
+        processed_pdb_path.exists()
+        and processed_pdb_ref_path.exists()
+        and not force_write
+    ):
+        logger.debug(
+            f"File {processed_pdb_path} and {processed_pdb_ref_path} already exists"
+        )
+
+    else:
+        pdb_model: Structure = load_PDB(str(pdb_path.resolve()))
+
+        peptide_chain = peptide_chains.split(":")[0]
+        protein_chains = protein_chains.split(":")
+
+        select_ref_chains = protein_chains + [peptide_chain]
+        pdb_ref: Structure = load_PDB(
+            str(pdb_ref_path.resolve()), chains=select_ref_chains
+        )
+        save_chain_mapping_path = processed_pdb_path.parent / "chain_mapping.json"
+        if save_chain_mapping_path.exists() and not force_write:
+            logger.debug(f"File {save_chain_mapping_path} already exists")
+            chain_mapping = json.load(save_chain_mapping_path.open("r"))
+        else:
+            chain_mapping = chain_map(pdb_model, pdb_ref)
+            save_chain_mapping_path.write_text(dict2json(chain_mapping))
+
+        logger.debug(chain_mapping)
+
+        process_pdb_chains(
+            pdb_ref,
+            protein_chains,
+            peptide_chain,
+            save_path=processed_pdb_ref_path,
+        )
+
+        process_pdb_chains(
+            pdb_model,
+            list(chain_mapping[chain] for chain in protein_chains),
+            chain_mapping[peptide_chain],
+            save_path=processed_pdb_path,
+        )
+
+
+def process_pdb_pair_chains_for_relax(
+    pdb_path: Path,
+    pdb_ref_path: Path,
+    peptide_chains: str,
+    protein_chains: str,
+    force_write: bool = False,
+    suffix_name: str = "complex_relaxed_processed",
+):
+    processed_pdb_path = pdb_path.parent / f"{suffix_name}.pdb"
+
+    if processed_pdb_path.exists() and not force_write:
+        logger.debug(f"File {processed_pdb_path} already exists")
+    else:
+        pdb_model: Structure = load_PDB(str(pdb_path.resolve()))
+        peptide_chain = peptide_chains.split(":")[0]
+        protein_chains = protein_chains.split(":")
+
+        select_ref_chains = protein_chains + [peptide_chain]
+        pdb_ref: Structure = load_PDB(
+            str(pdb_ref_path.resolve()), chains=select_ref_chains
+        )
+        save_chain_mapping_path = (
+            processed_pdb_path.parent / "chain_mapping_relaxed.json"
+        )
+        if save_chain_mapping_path.exists() and not force_write:
+            logger.debug(f"File {save_chain_mapping_path} already exists")
+            chain_mapping = json.load(save_chain_mapping_path.open("r"))
+        else:
+            chain_mapping = chain_map(pdb_model, pdb_ref)
+            save_chain_mapping_path.write_text(dict2json(chain_mapping))
+
+        logger.debug(chain_mapping)
+
+        process_pdb_chains(
+            pdb_model,
+            list(chain_mapping[chain] for chain in protein_chains),
+            chain_mapping[peptide_chain],
+            save_path=processed_pdb_path,
+        )
