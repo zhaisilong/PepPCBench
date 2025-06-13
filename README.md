@@ -115,6 +115,10 @@ python evaluate/cal_deltag.py
   - `contact_map.ipynb`: visualize the contact map of the predicted complex
   - `ranking_power.ipynb`: visualize the ranking power of different scoring functions for the predicted complex
 
+## Some Important Notes
+
+1. The calculation of `actifpTM` is based on additional outputs provided by AlphaFold3. The corresponding extraction code can be found in the `patches/actifpTM` directory and the notebook `./notebooks/contact_map.ipynb`.
+
 ## Citations
 
 ```bibtex
