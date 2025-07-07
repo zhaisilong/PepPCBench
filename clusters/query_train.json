@@ -1,0 +1,127 @@
+{
+  "query": {
+    "type": "group",
+    "logical_operator": "and",
+    "nodes": [
+      {
+        "type": "group",
+        "logical_operator": "or",
+        "nodes": [
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "rcsb_pubmed_abstract_text",
+              "operator": "contains_words",
+              "negation": false,
+              "value": "peptide"
+            }
+          },
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "struct.title",
+              "operator": "contains_words",
+              "negation": false,
+              "value": "peptide"
+            }
+          },
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "rcsb_primary_citation.title",
+              "operator": "contains_words",
+              "negation": false,
+              "value": "peptide"
+            }
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "logical_operator": "and",
+        "nodes": [
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "entity_poly.rcsb_entity_polymer_type",
+              "operator": "exact_match",
+              "negation": false,
+              "value": "Protein"
+            }
+          },
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "rcsb_entry_info.selected_polymer_entity_types",
+              "operator": "exact_match",
+              "negation": false,
+              "value": "Protein (only)"
+            }
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "logical_operator": "or",
+        "nodes": [
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "exptl.method",
+              "value": "X-RAY DIFFRACTION",
+              "operator": "exact_match"
+            }
+          },
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "exptl.method",
+              "value": "SOLUTION NMR",
+              "operator": "exact_match"
+            }
+          },
+          {
+            "type": "terminal",
+            "service": "text",
+            "parameters": {
+              "attribute": "exptl.method",
+              "value": "ELECTRON MICROSCOPY",
+              "operator": "exact_match"
+            }
+          }
+        ]
+      },
+      {
+        "type": "terminal",
+        "service": "text",
+        "parameters": {
+          "attribute": "rcsb_accession_info.initial_release_date",
+          "operator": "less_or_equal",
+          "negation": false,
+          "value": "2021-09-30"
+        }
+      }
+    ]
+  },
+  "return_type": "entry",
+  "request_options": {
+    "paginate": {
+      "start": 0,
+      "rows": 3000
+    },
+    "sort": [
+      {
+        "sort_by": "score",
+        "direction": "desc"
+      }
+    ],
+    "results_content_type": ["experimental"]
+  }
+}
