@@ -2,11 +2,6 @@
 
 PepPCBench: A Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3
 
-⚠️ Under Peer Review | Data & Scripts Coming Soon
-
-The peer-review process is currently ongoing. In the meantime, to promote open science and foster early community collaboration, we have decided to release the code and data ahead of publication.
-This repository is still under active development and will be continuously updated and expanded in future work, including applications to cyclic monomer and cyclic peptide–protein complex prediction.
-
 We welcome feedback from the community!
 For questions, issues, or dataset requests, please open an [Issue](https://github.com/zhaisilong/PepPCBench/issues) or contact us directly at `zhaisilong@outlook.com`.
 
@@ -122,14 +117,18 @@ python evaluate/cal_deltag.py
 ## Citations
 
 ```bibtex
-@article {Zhai2025.04.08.647699,
- author = {Zhai, Silong and Zhao, Huifeng and Wang, Jike and Lin, Shaolong and Liu, Tiantao and Jiang, Dejun and Liu, Huanxiang and Kang, Yu and Yao, Xiaojun and Hou, Tingjun},
- title = {PepPCBench is a Comprehensive Benchmark for Protein-Peptide Complex Structure Prediction with AlphaFold3},
- elocation-id = {2025.04.08.647699},
- year = {2025},
- doi = {10.1101/2025.04.08.647699},
- publisher = {Cold Spring Harbor Laboratory},
- eprint = {https://www.biorxiv.org/content/early/2025/04/13/2025.04.08.647699.full.pdf},
- journal = {bioRxiv}
+@article{zhaiPepPCBenchComprehensiveBenchmarking2025,
+  title = {{{PepPCBench}} Is a {{Comprehensive Benchmarking Framework}} for {{Protein}}–{{Peptide Complex Structure Prediction}}},
+  author = {Zhai, Silong and Zhao, Huifeng and Wang, Jike and Lin, Shaolong and Liu, Tiantao and Gu, Shukai and Jiang, Dejun and Liu, Huanxiang and Kang, Yu and Yao, Xiaojun and Hou, Tingjun},
+  date = {2025-08-25},
+  journaltitle = {Journal of Chemical Information and Modeling},
+  shortjournal = {J. Chem. Inf. Model.},
+  volume = {65},
+  number = {16},
+  pages = {8497--8513},
+  publisher = {American Chemical Society},
+  issn = {1549-9596},
+  doi = {10.1021/acs.jcim.5c01084},
+  url = {https://doi.org/10.1021/acs.jcim.5c01084}
 }
 ```
